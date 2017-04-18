@@ -1,29 +1,18 @@
-# truffle-init-webpack
-Example webpack project with Truffle. Includes contracts, migrations, tests, user interface and webpack build pipeline.
+# RedditRegister
 
-## Usage
-
-To initialize a project with this exapmple, run `truffle init webpack` inside an empty directory.
-
-## Building and the frontend
+## Building
 
 1. First run `truffle compile`, then run `truffle migrate` to deploy the contracts onto your network of choice (default "development").
-1. Then run `npm run dev` to build the app and serve it on http://localhost:8080
+1. Then run `truffle test` to run basic tests
 
-## Possible upgrades
+## Some notes
 
-* Use the webpack hotloader to sense when contracts or javascript have been recompiled and rebuild the application. Contributions welcome!
+* Pull larger json blob from reddit via Oraclize and parse it (I've looked at jsmnsol-lib). This would mean a single Oraclize call which would be simpler, but more tricky parsing. In particular with jsmnsol-lib you would need to walk over each json token, checking for key / value pairs that match. On the plus side we could store more information related to the account.
 
-## Common Errors
+* Refund excess msg.value to caller. Some msg.value is required to fund the Oraclize calls - currently the contract throws if too little is sent, but ignores too much being sent. Ideally this would be done with a withdraw contract (perhaps using Zepplin's withdrawable approach) to avoid stack overflow / bad fallback functions etc..
 
-* **Error: Can't resolve '../build/contracts/MetaCoin.json'**
+* Contract required posted address (on reddit.com/r/ethereumproofs) to be all lower-case. The address parsing logic in Oraclize library requires this. This function could be re-written to be more forgiving.
 
-This means you haven't compiled or migrated your contracts yet. Run `truffle compile` and `truffle migrate` first.
+* Writing tests is tricky with Oraclize as it is effectively "asynchronous". More effort required to write a full test suite.
 
-Full error:
-
-```
-ERROR in ./app/main.js
-Module not found: Error: Can't resolve '../build/contracts/MetaCoin.json' in '/Users/tim/Documents/workspace/Consensys/test3/app'
- @ ./app/main.js 11:16-59
-```
+* NB - I've found Oraclize on the test-net (I was using Ropsten) to be quite flacky - sometimes callbacks happen, sometimes they don't, and in addition they don't always return consistent data.
