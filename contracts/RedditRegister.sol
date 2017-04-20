@@ -10,7 +10,7 @@ contract RedditRegister is usingOraclize {
   event AddressMismatch(address _actual, address _expected);
   event InsufficientFunds(uint _funds, uint _cost);
   event BadOracleResult(string _message, string _result, bytes32 _id);
-
+  event MessageMe(string _string);
   enum OracleType { NAME, ADDR }
 
   mapping (address => string) addrToName;
@@ -106,18 +106,17 @@ contract RedditRegister is usingOraclize {
     uint inputPos = 0;
     bytes1 c;
     bool reading = false;
-    bool wasBackSlash = false;
 
     for (inputPos = 0; inputPos < inputBytes.length - 1; inputPos++) {
       c = inputBytes[inputPos];
-      if (wasBackSlash && c == '"') {
+      if (c == '"') {
         if (!reading) {
           bytesStart = inputPos + 1;
         }
         if (reading) {
-          bytesBuffer = new bytes(bytesLength - 1);
+          bytesBuffer = new bytes(bytesLength);
           uint bytesPos = 0;
-          for (uint i = bytesStart; i < inputPos - 1; i++) {
+          for (uint i = bytesStart; i < inputPos; i++) {
             bytesBuffer[bytesPos] = inputBytes[i];
             bytesPos++;
           }
@@ -134,12 +133,6 @@ contract RedditRegister is usingOraclize {
       }
       if (reading) {
         bytesLength++;
-      }
-      //92 is '\'
-      if (uint160(c) == 92) {
-        wasBackSlash = true;
-      } else {
-        wasBackSlash = false;
       }
     }
     if (tokensFound != 2) {
