@@ -5,28 +5,18 @@ import "../installed_contracts/oraclize/contracts/usingOraclize.sol";
 contract RedditRegister is usingOraclize {
 
   event NameAddressRegistered(string _name, address _addr);
-  event AddressOracleReceived(string _result, bytes32 _id);
-  event AddressOracleSent(string _url, bytes32 _id);
-  event NameOracleReceived(string _result, bytes32 _id);
-  event NameOracleSent(string _url, bytes32 _id);
+  event OracleQueryReceived(string _result, bytes32 _id);
+  event OracleQuerySent(string _url, bytes32 _id);
   event AddressMismatch(address _actual, address _expected);
   event InsufficientFunds(uint _funds, uint _cost);
-  event BadOracleResult(string _message, bytes32 _id);
+  event BadOracleResult(string _message, string _result, bytes32 _id);
 
   enum OracleType { NAME, ADDR }
 
   mapping (address => string) addrToName;
   mapping (string => address) nameToAddr;
-
-  mapping (bytes32 => OracleType) oracleCallbackType;
   mapping (bytes32 => address) oracleExpectedAddress;
-  mapping (bytes32 => string) oracleName;
-
-  mapping (bytes32 => bytes32) addrToNameCallbackId;
-  mapping (bytes32 => bytes32) nameToAddrCallbackId;
-
-  mapping (bytes32 => bool) addrOracleCallbackComplete;
-  mapping (bytes32 => bool) nameOracleCallbackComplete;
+  mapping (bytes32 => bool) oracleCallbackComplete;
 
   address owner;
 
@@ -44,34 +34,30 @@ contract RedditRegister is usingOraclize {
 
   function __callback(bytes32 _id, string _result) {
 
+    //Check basic error conditions (throw on error)
     if (msg.sender != oraclize_cbAddress()) throw;
-    bytes memory resultBytes = bytes(_result);
-    uint resultLength = resultBytes.length;
-    if (resultLength == 0) {
-      BadOracleResult("Empty result returned from Oracle", _id);
-    } else if (oracleCallbackType[_id] == OracleType.ADDR) {
-      AddressOracleReceived(_result, _id);
-      address oracleAddr = parseAddr(_result);
-      if (oracleExpectedAddress[_id] == oracleAddr) {
-        addrOracleCallbackComplete[_id] = true;
-        bytes32 nameId = addrToNameCallbackId[_id];
-        if (nameOracleCallbackComplete[nameId]) {
-          update(oracleName[nameId], oracleAddr);
-        }
-      } else {
-        AddressMismatch(oracleExpectedAddress[_id], oracleAddr);
-      }
-    } else if (oracleCallbackType[_id] == OracleType.NAME) {
-      NameOracleReceived(_result, _id);
-      nameOracleCallbackComplete[_id] = true;
-      oracleName[_id] = _result;
-      bytes32 addrId = nameToAddrCallbackId[_id];
-      if (addrOracleCallbackComplete[addrId]) {
-        update(_result, oracleExpectedAddress[addrId]);
-      }
-    } else {
-      throw;
+    if (oracleCallbackComplete[_id]) throw;
+
+    //Record callback received
+    oracleCallbackComplete[_id] = true;
+    OracleQueryReceived(_result, _id);
+
+    //Check contract specific error conditions (set event and return on error)
+    var (success, redditName, redditAddrString) = parseResult(_result);
+    if (!success) {
+      BadOracleResult("Incorrect length data returned from Oracle", _result, _id);
+      return;
     }
+
+    //Check validity of claim to address
+    address redditAddr = parseAddr(redditAddrString);
+    if (oracleExpectedAddress[_id] != redditAddr) {
+      AddressMismatch(oracleExpectedAddress[_id], redditAddr);
+      return;
+    }
+
+    //We can now update our registry!!!
+    update(redditName, redditAddr);
 
   }
 
@@ -82,21 +68,14 @@ contract RedditRegister is usingOraclize {
         return false;
       }
       uint oraclePrice = oraclize_getPrice("URL");
-      if ((2 * oraclePrice) > this.balance) {
-        InsufficientFunds(this.balance, 2 * oraclePrice);
+      if (oraclePrice > this.balance) {
+        InsufficientFunds(this.balance, oraclePrice);
         return false;
       }
-      string memory addrOracleQuery = strConcat('json(https://www.reddit.com/r/ethereumproofs/comments/', _hash, '.json).0.data.children.0.data.title');
-      string memory nameOracleQuery = strConcat('json(https://www.reddit.com/r/ethereumproofs/comments/', _hash, '.json).0.data.children.0.data.author');
-      bytes32 addrOracleId = oraclize_query("URL", addrOracleQuery);
-      AddressOracleSent(addrOracleQuery, addrOracleId);
-      bytes32 nameOracleId = oraclize_query("URL", nameOracleQuery);
-      NameOracleSent(nameOracleQuery, nameOracleId);
-      oracleCallbackType[addrOracleId] = OracleType.ADDR;
-      oracleCallbackType[nameOracleId] = OracleType.NAME;
-      addrToNameCallbackId[addrOracleId] = nameOracleId;
-      nameToAddrCallbackId[nameOracleId] = addrOracleId;
-      oracleExpectedAddress[addrOracleId] = msg.sender;
+      string memory oracleQuery = strConcat('json(https://www.reddit.com/r/ethereumproofs/comments/', _hash, '.json).0.data.children.0.data.[author,title]');
+      bytes32 oracleId = oraclize_query("URL", oracleQuery);
+      OracleQuerySent(oracleQuery, oracleId);
+      oracleExpectedAddress[oracleId] = msg.sender;
       return true;
   }
 
@@ -105,6 +84,69 @@ contract RedditRegister is usingOraclize {
     nameToAddr[_name] = _addr;
     NameAddressRegistered(_name, _addr);
     return true;
+  }
+
+  function parseResult(string _input) internal returns (bool success, string name, string addr) {
+    bytes memory inputBytes = bytes(_input);
+    //Zero length input
+    if (inputBytes.length == 0) {
+      return (success, name, addr);
+    }
+    //Non array input
+    if (inputBytes[0] != '[' || inputBytes[inputBytes.length - 1] != ']') {
+      return (success, name, addr);
+    }
+    //Need to loop twice:
+    //Outer loop to determine length of token
+    //Inner loop to initialize token with correct length and populate
+    uint tokensFound = 0;
+    bytes memory bytesBuffer;
+    uint bytesLength = 0;
+    uint bytesStart;
+    uint inputPos = 0;
+    bytes1 c;
+    bool reading = false;
+    bool wasBackSlash = false;
+
+    for (inputPos = 0; inputPos < inputBytes.length - 1; inputPos++) {
+      c = inputBytes[inputPos];
+      if (wasBackSlash && c == '"') {
+        if (!reading) {
+          bytesStart = inputPos + 1;
+        }
+        if (reading) {
+          bytesBuffer = new bytes(bytesLength - 1);
+          uint bytesPos = 0;
+          for (uint i = bytesStart; i < inputPos - 1; i++) {
+            bytesBuffer[bytesPos] = inputBytes[i];
+            bytesPos++;
+          }
+          if (tokensFound == 0) {
+            name = string(bytesBuffer);
+          } else {
+            addr = string(bytesBuffer);
+          }
+          bytesLength = 0;
+          tokensFound++;
+        }
+        reading = !reading;
+        continue;
+      }
+      if (reading) {
+        bytesLength++;
+      }
+      //92 is '\'
+      if (uint160(c) == 92) {
+        wasBackSlash = true;
+      } else {
+        wasBackSlash = false;
+      }
+    }
+    if (tokensFound != 2) {
+      return (success, name, addr);
+    }
+    success = true;
+    return (success, name, addr);
   }
 
 }
