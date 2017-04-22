@@ -88,14 +88,14 @@ window.App = {
     var self = this;
 
     var addr = document.getElementById("addr").value;
-    var hash = document.getElementById("hash").value;
+    var proof = document.getElementById("proof").value;
 
     var redditRegister;
     RedditRegister.deployed().then(function(instance) {
       redditRegister = instance;
       return redditRegister.getOraclePrice.call({from: account});
     }).then(function(price) {
-      return redditRegister.register(hash, addr, {from: account, value: price.toNumber()});
+      return redditRegister.register(proof, addr, {from: account, value: price.toNumber()});
     }).then(function(result) {
       for (var i = 0; i < result.logs.length; i++) {
         var log = result.logs[i];
@@ -117,7 +117,7 @@ window.App = {
       return redditRegister.lookupAddr.call(addr, {from: account});
     }).then(function(result) {
       var name_element = document.getElementById("lookupName");
-      self.updateLookupUrl(result[1]);
+      self.updateLookupProofUrl(result[1]);
       name_element.value = result[0];
     }).catch(function(e) {
       console.log(e);
@@ -134,7 +134,7 @@ window.App = {
       return redditRegister.lookupName.call(name, {from: account});
     }).then(function(result) {
       var addr_element = document.getElementById("lookupAddr");
-      self.updateLookupUrl(result[1]);
+      self.updateLookupProofUrl(result[1]);
       addr_element.value = result[0];
     }).catch(function(e) {
       console.log(e);
@@ -142,9 +142,9 @@ window.App = {
     });
   },
 
-  updateLookupUrl: function(lookupUrl) {
-    var url_element = document.getElementById("lookupUrl");
-    url_element.value = proofUrlPrepend + lookupUrl + proofUrlAppend;
+  updateLookupProofUrl: function(lookupProofUrl) {
+    var url_element = document.getElementById("lookupProofUrl");
+    url_element.value = proofUrlPrepend + lookupProofUrl + proofUrlAppend;
   }
 
 };
