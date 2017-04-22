@@ -20,6 +20,8 @@ contract RedditRegister is usingOraclize {
   mapping (bytes32 => string) oracleHash;
   mapping (bytes32 => bool) oracleCallbackComplete;
 
+  uint oraclizeGasLimit = 400000;
+
   string queryUrlPrepend = 'json(https://www.reddit.com/r/ethereumproofs/comments/';
   string queryUrlAppend = '.json).0.data.children.0.data.[author,title]';
 
@@ -29,16 +31,16 @@ contract RedditRegister is usingOraclize {
     owner = msg.sender;
   }
 
-  function lookupAddr(address _addr) public constant returns(string name) {
-    return addrToName[_addr];
+  function lookupAddr(address _addr) public constant returns(string name, string hash) {
+    return (addrToName[_addr], addrToHash[_addr]);
   }
 
-  function lookupHash(address _addr) public constant returns(string hash) {
-    return addrToHash[_addr];
+  function lookupName(string _name) public constant returns(address addr, string hash) {
+    return (nameToAddr[_name], addrToHash[nameToAddr[_name]]);
   }
 
-  function lookupName(string _name) public constant returns(address addr) {
-    return nameToAddr[_name];
+  function getOraclePrice() public constant returns(uint price) {
+    price = oraclize_getPrice("URL", oraclizeGasLimit);
   }
 
   function __callback(bytes32 _id, string _result) {
@@ -80,13 +82,13 @@ contract RedditRegister is usingOraclize {
         AddressMismatch(msg.sender, _addr);
       }
 
-      uint oraclePrice = oraclize_getPrice("URL");
+      uint oraclePrice = oraclize_getPrice("URL", oraclizeGasLimit);
       if (oraclePrice > this.balance) {
         InsufficientFunds(this.balance, oraclePrice);
       }
 
       string memory oracleQuery = strConcat(queryUrlPrepend, _hash, queryUrlAppend);
-      oracleId = oraclize_query("URL", oracleQuery);
+      oracleId = oraclize_query("URL", oracleQuery, oraclizeGasLimit);
       OracleQuerySent(oracleQuery, oracleId);
       oracleExpectedAddress[oracleId] = msg.sender;
       oracleHash[oracleId] = _hash;

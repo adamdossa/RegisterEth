@@ -39,8 +39,17 @@ h3 {
   font-size: 24px;
 }
 
+label {
+  color: blue;
+  width: 150px;
+}
+
 .black {
   color: black;
+}
+
+.grey {
+  color: #AAA;
 }
 
 #balance {
