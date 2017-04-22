@@ -6,25 +6,28 @@ import { default as Web3} from 'web3';
 import { default as contract } from 'truffle-contract'
 
 // Import our contract artifacts and turn them into usable abstractions.
-import metacoin_artifacts from '../../build/contracts/MetaCoin.json'
+import redditRegister_artifacts from '../../build/contracts/RedditRegister.json'
 
-// MetaCoin is our usable abstraction, which we'll use through the code below.
-var MetaCoin = contract(metacoin_artifacts);
+// RedditRegister is our usable abstraction, which we'll use through the code below.
+var RedditRegister = contract(redditRegister_artifacts);
 
-// The following code is simple to show off interacting with your contracts.
-// As your needs grow you will likely need to change its form and structure.
-// For application bootstrapping, check out window.addEventListener below.
 var accounts;
 var account;
+
+var proofUrlPrepend = 'https://www.reddit.com/r/ethereumproofs/comments/';
+var proofUrlAppend = '.json';
 
 window.App = {
   start: function() {
     var self = this;
 
-    // Bootstrap the MetaCoin abstraction for Use.
-    MetaCoin.setProvider(web3.currentProvider);
+    // Bootstrap the RedditRegister abstraction for use.
+    RedditRegister.setProvider(web3.currentProvider);
+    self.refreshAccount();
+  },
 
-    // Get the initial account balance so it can be displayed.
+  refreshAccount: function() {
+    var self = this;
     web3.eth.getAccounts(function(err, accs) {
       if (err != null) {
         alert("There was an error fetching your accounts.");
@@ -38,64 +41,120 @@ window.App = {
 
       accounts = accs;
       account = accounts[0];
-
-      self.refreshBalance();
+      self.setAddress(account);
+      self.refreshName();
     });
   },
 
-  setStatus: function(message) {
-    var status = document.getElementById("status");
+  setRegisterStatus: function(message) {
+    var status = document.getElementById("registerStatus");
     status.innerHTML = message;
   },
 
-  refreshBalance: function() {
+  setLookupStatus: function(message) {
+    var status = document.getElementById("lookupStatus");
+    status.innerHTML = message;
+  },
+
+  setAddress: function(addr) {
+    var addr_element = document.getElementById("addr");
+    addr_element.value = addr;
+  },
+
+  refreshName: function() {
     var self = this;
 
-    var meta;
-    MetaCoin.deployed().then(function(instance) {
-      meta = instance;
-      return meta.getBalance.call(account, {from: account});
-    }).then(function(value) {
-      var balance_element = document.getElementById("balance");
-      balance_element.innerHTML = value.valueOf();
+    var redditRegister;
+    RedditRegister.deployed().then(function(instance) {
+      redditRegister = instance;
+      return redditRegister.lookupAddr.call(account, {from: account});
+    }).then(function(result) {
+      var name_element = document.getElementById("name");
+      var proofUrl_element = document.getElementById("proofUrl");
+      if (result[0] === "") {
+        name_element.innerHTML = "nothing";
+        proofUrl_element.innerHTML = "https://";
+      } else {
+        name_element.innerHTML = result[0];
+        proofUrl_element.innerHTML = proofUrlPrepend + result[1] + proofUrlAppend;
+      }
     }).catch(function(e) {
       console.log(e);
-      self.setStatus("Error getting balance; see log.");
+      self.setRegisterStatus("Error getting reddit name; see log.");
     });
   },
 
-  sendCoin: function() {
+  register: function() {
     var self = this;
 
-    var amount = parseInt(document.getElementById("amount").value);
-    var receiver = document.getElementById("receiver").value;
+    var addr = document.getElementById("addr").value;
+    var hash = document.getElementById("hash").value;
 
-    this.setStatus("Initiating transaction... (please wait)");
-
-    var meta;
-    MetaCoin.deployed().then(function(instance) {
-      meta = instance;
-      return meta.sendCoin(receiver, amount, {from: account});
-    }).then(function() {
-      self.setStatus("Transaction complete!");
-      self.refreshBalance();
+    var redditRegister;
+    RedditRegister.deployed().then(function(instance) {
+      redditRegister = instance;
+      return redditRegister.getOraclePrice.call({from: account});
+    }).then(function(price) {
+      return redditRegister.register(hash, addr, {from: account, value: price.toNumber()});
+    }).then(function(result) {
+      for (var i = 0; i < result.logs.length; i++) {
+        var log = result.logs[i];
+        console.log(log);
+        self.setRegisterStatus(log.event);
+      }
     }).catch(function(e) {
       console.log(e);
-      self.setStatus("Error sending coin; see log.");
+      self.setLookupStatus("Error registering; see log.");
     });
+  },
+
+  lookupAddr: function() {
+    var self = this;
+    var addr = document.getElementById("lookupAddr").value;
+    var redditRegister;
+    RedditRegister.deployed().then(function(instance) {
+      redditRegister = instance;
+      return redditRegister.lookupAddr.call(addr, {from: account});
+    }).then(function(result) {
+      var name_element = document.getElementById("lookupName");
+      self.updateLookupUrl(result[1]);
+      name_element.value = result[0];
+    }).catch(function(e) {
+      console.log(e);
+      self.setLookupStatus("Error looking up address; see log.");
+    });
+  },
+
+  lookupName: function() {
+    var self = this;
+    var name = document.getElementById("lookupName").value;
+    var redditRegister;
+    RedditRegister.deployed().then(function(instance) {
+      redditRegister = instance;
+      return redditRegister.lookupName.call(name, {from: account});
+    }).then(function(result) {
+      var addr_element = document.getElementById("lookupAddr");
+      self.updateLookupUrl(result[1]);
+      addr_element.value = result[0];
+    }).catch(function(e) {
+      console.log(e);
+      self.setLookupStatus("Error looking up name; see log.");
+    });
+  },
+
+  updateLookupUrl: function(lookupUrl) {
+    var url_element = document.getElementById("lookupUrl");
+    url_element.value = proofUrlPrepend + lookupUrl + proofUrlAppend;
   }
+
 };
 
 window.addEventListener('load', function() {
   // Checking if Web3 has been injected by the browser (Mist/MetaMask)
   if (typeof web3 !== 'undefined') {
-    console.warn("Using web3 detected from external source. If you find that your accounts don't appear or you have 0 MetaCoin, ensure you've configured that source properly. If using MetaMask, see the following link. Feel free to delete this warning. :) http://truffleframework.com/tutorials/truffle-and-metamask")
+    console.warn("Using web3 detected from external source. If you find that your accounts don't appear or you have unexpected results, ensure you've configured that source properly. If using MetaMask, see the following link. Feel free to delete this warning. :) http://truffleframework.com/tutorials/truffle-and-metamask");
     // Use Mist/MetaMask's provider
     window.web3 = new Web3(web3.currentProvider);
-  } else {
-    console.warn("No web3 detected. Falling back to http://localhost:8545. You should remove this fallback when you deploy live, as it's inherently insecure. Consider switching to Metamask for development. More info here: http://truffleframework.com/tutorials/truffle-and-metamask");
-    // fallback - use your fallback strategy (local node / hosted node + in-dapp id mgmt / fail)
-    window.web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
   }
 
   App.start();
