@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>RedditRegister</title>
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+  <script src="./app.js"></script>
+</head>
+<body>
+  <h1>RedditRegister</h1>
+  <h2>Link your Reddit username to your Ethereum address</h2>
+  <h3>You have <span class="black" id="name"></span> currently registered to your Ethereum address</h3>
+  <h3>URL Proof is at: <span class="black" id="proofUrl"></span></h3>
+  <h3 class="black">Register here:</h3>
+  <label for="addr">Ethereum Address: </label><input class="black" id="addr"></input>
+  <br><br>
+  <label for="hash">Proof Hash: </label><input type="text" id="hash" placeholder="e.g. 66cvut"></input>
+  <br><br>
+  <button id="register" onclick="App.register()">Register</button>
+  <span id="registerStatus"></span>
+  <br><br><br>
+  <h3 class="black">Lookup here:</h3>
+  <label for="lookupUrl">URL Proof is at: </label><input class="black" id="lookupUrl"></input>
+  <br><br>
+  <label for="lookupAddr">Ethereum Address: </label><input class="black" id="lookupAddr"></input>
+  <button id="lookupAddrButton" onclick="App.lookupAddr()">Lookup Address</button>
+  <br><br>
+  <label for="lookupName">Reddit Username: </label><input class="black" id="lookupName"></input>
+  <button id="lookupNameButton" onclick="App.lookupName()">Lookup Name</button>
+  <br><br>
+  <span id="lookupStatus"></span>
+</body>
+</html>
