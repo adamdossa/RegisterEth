@@ -18,6 +18,8 @@
 
 * Unit tests cover behaviour of Oraclize callback function, but not the Register function (which is trivial). This is because doing so would require deploying to a network running Oraclize contracts, or using the ethereum-bridge and dealing with asyncronous responses.
 
+* Calls to lookupAddr / lookupName will always return the most recently registered name / address respectively. Old addresses / names can still be passed to lookupAddr / Name and you will receive back valid names / addresses. Passing the returned name / address back into the lookupName / lookupAddr and comparing the response with the original input will tell you whether the registration is the most recent for the given original address / name.
+
 ## Expected test output
 
 ```shell

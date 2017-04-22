@@ -104,7 +104,7 @@ window.App = {
       }
     }).catch(function(e) {
       console.log(e);
-      self.setLookupStatus("Error registering; see log.");
+      self.setRegisterStatus("Error registering; see log.");
     });
   },
 

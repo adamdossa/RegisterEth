@@ -16,6 +16,7 @@ contract RedditRegister is usingOraclize {
   mapping (address => string) addrToName;
   mapping (string => address) nameToAddr;
   mapping (address => string) addrToHash;
+  mapping (string => string) nameToHash;
   mapping (bytes32 => address) oracleExpectedAddress;
   mapping (bytes32 => string) oracleHash;
   mapping (bytes32 => bool) oracleCallbackComplete;
@@ -36,7 +37,7 @@ contract RedditRegister is usingOraclize {
   }
 
   function lookupName(string _name) public constant returns(address addr, string hash) {
-    return (nameToAddr[_name], addrToHash[nameToAddr[_name]]);
+    return (nameToAddr[_name], nameToHash[_name]);
   }
 
   function getOraclePrice() public constant returns(uint price) {
@@ -101,6 +102,7 @@ contract RedditRegister is usingOraclize {
     addrToName[_addr] = _name;
     nameToAddr[_name] = _addr;
     addrToHash[_addr] = _hash;
+    nameToHash[_name] = _hash;
     NameAddressHashRegistered(_name, _addr, _hash);
     return true;
   }

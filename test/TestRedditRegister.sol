@@ -140,7 +140,7 @@ contract TestRedditRegister is RedditRegister {
 
   function testCallback_changeName() {
 
-    //Mixed case input
+    //First name updated
     _callback(oracleId_1, '["user_1", "0x9a9d8FF9854a2722a76a99de6c1Bb71d93898eF5"]');
     string memory nameResponse_1 = lookupAddr(addr_1);
     Assert.equal(nameResponse_1, name_1, "Name should have registered");
@@ -150,6 +150,7 @@ contract TestRedditRegister is RedditRegister {
     Assert.equal(hashResponse_1, hash_1, "Hash should have registered");
     Assert.equal(oracleCallbackComplete[oracleId_1], true, "Callback should not have triggered");
 
+    //Second name registered
     bytes32 oracleId_1_1 = "0x03";
     string memory name_1_1 = "user_1_1";
     string memory hash_1_1 = "hash_1_1";
@@ -166,11 +167,14 @@ contract TestRedditRegister is RedditRegister {
     Assert.equal(hashResponse_1_1, hash_1_1, "Hash should have registered");
     Assert.equal(oracleCallbackComplete[oracleId_1_1], true, "Callback should not have triggered");
 
+    //Check that first name is now blank
+    
+
   }
 
   function testCallback_changeAddress() {
 
-    //Mixed case input
+    //First address updated
     _callback(oracleId_1, '["user_1", "0x9a9d8FF9854a2722a76a99de6c1Bb71d93898eF5"]');
     string memory nameResponse_1 = lookupAddr(addr_1);
     Assert.equal(nameResponse_1, name_1, "Name should have registered");
@@ -180,13 +184,14 @@ contract TestRedditRegister is RedditRegister {
     Assert.equal(hashResponse_1, hash_1, "Hash should have registered");
     Assert.equal(oracleCallbackComplete[oracleId_1], true, "Callback should not have triggered");
 
+    //Second address registered
     bytes32 oracleId_1_1 = "0x03";
     address addr_1_1 = 0x209d8ff9854a2722a76a99de6c1bb71d93898ef5;
     string memory hash_1_1 = "hash_1_1";
     oracleExpectedAddress[oracleId_1_1] = addr_1_1;
     oracleHash[oracleId_1_1] = hash_1_1;
 
-    //Change name to "user_1_1"
+    //Change addr to "0x209d8ff9854a2722a76a99de6c1bb71d93898ef5"
     _callback(oracleId_1_1, '["user_1", "0x209d8ff9854a2722a76a99de6c1bb71d93898ef5"]');
     string memory nameResponse_1_1 = lookupAddr(addr_1_1);
     Assert.equal(nameResponse_1_1, name_1, "Name should have registered");
