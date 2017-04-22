@@ -20,7 +20,7 @@ contract RedditRegister is usingOraclize {
   mapping (bytes32 => string) oracleHash;
   mapping (bytes32 => bool) oracleCallbackComplete;
 
-  uint oraclizeGasLimit = 400000;
+  uint oraclizeGasLimit = 220000;
 
   string queryUrlPrepend = 'json(https://www.reddit.com/r/ethereumproofs/comments/';
   string queryUrlAppend = '.json).0.data.children.0.data.[author,title]';
@@ -80,11 +80,13 @@ contract RedditRegister is usingOraclize {
       //_addr not strictly needed - but we use it to do an upfront check to avoid wasted oracle queries
       if (msg.sender != _addr) {
         AddressMismatch(msg.sender, _addr);
+        return;
       }
 
       uint oraclePrice = oraclize_getPrice("URL", oraclizeGasLimit);
       if (oraclePrice > this.balance) {
         InsufficientFunds(this.balance, oraclePrice);
+        return;
       }
 
       string memory oracleQuery = strConcat(queryUrlPrepend, _hash, queryUrlAppend);

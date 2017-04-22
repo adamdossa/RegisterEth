@@ -14,14 +14,20 @@ var RedditRegister = contract(redditRegister_artifacts);
 var accounts;
 var account;
 
+var proofUrlPrepend = 'https://www.reddit.com/r/ethereumproofs/comments/';
+var proofUrlAppend = '.json';
+
 window.App = {
   start: function() {
     var self = this;
 
     // Bootstrap the RedditRegister abstraction for use.
     RedditRegister.setProvider(web3.currentProvider);
+    self.refreshAccount();
+  },
 
-    // Get the initial account balance so it can be displayed.
+  refreshAccount: function() {
+    var self = this;
     web3.eth.getAccounts(function(err, accs) {
       if (err != null) {
         alert("There was an error fetching your accounts.");
@@ -35,8 +41,8 @@ window.App = {
 
       accounts = accs;
       account = accounts[0];
-      self.refreshName();
       self.setAddress(account);
+      self.refreshName();
     });
   },
 
@@ -67,14 +73,14 @@ window.App = {
       var proofUrl_element = document.getElementById("proofUrl");
       if (result[0] === "") {
         name_element.innerHTML = "nothing";
-        proofUrl_element.innerHTML = "https://"
+        proofUrl_element.innerHTML = "https://";
       } else {
         name_element.innerHTML = result[0];
-        proofUrl_element.innerHTML = "https://"
+        proofUrl_element.innerHTML = proofUrlPrepend + result[1] + proofUrlAppend;
       }
     }).catch(function(e) {
       console.log(e);
-      self.setRegisterStatus("Error getting name; see log.");
+      self.setRegisterStatus("Error getting reddit name; see log.");
     });
   },
 
@@ -93,6 +99,7 @@ window.App = {
     }).then(function(result) {
       for (var i = 0; i < result.logs.length; i++) {
         var log = result.logs[i];
+        console.log(log);
         self.setRegisterStatus(log.event);
       }
     }).catch(function(e) {
@@ -102,15 +109,16 @@ window.App = {
   },
 
   lookupAddr: function() {
+    var self = this;
     var addr = document.getElementById("lookupAddr").value;
     var redditRegister;
     RedditRegister.deployed().then(function(instance) {
       redditRegister = instance;
       return redditRegister.lookupAddr.call(addr, {from: account});
     }).then(function(result) {
-      var name_element = document.getElementById("lookupName")
-      self.updateLookupURL(result[1]);
-      name_element.innerHTML = result[0];
+      var name_element = document.getElementById("lookupName");
+      self.updateLookupUrl(result[1]);
+      name_element.value = result[0];
     }).catch(function(e) {
       console.log(e);
       self.setLookupStatus("Error looking up address; see log.");
@@ -118,15 +126,16 @@ window.App = {
   },
 
   lookupName: function() {
+    var self = this;
     var name = document.getElementById("lookupName").value;
     var redditRegister;
     RedditRegister.deployed().then(function(instance) {
       redditRegister = instance;
-      return redditRegister.lookupName.call(addr, {from: account});
+      return redditRegister.lookupName.call(name, {from: account});
     }).then(function(result) {
-      var addr_element = document.getElementById("lookupAddr")
-      self.updateLookupURL(result[1]);
-      addr_element.innerHTML = result[0];
+      var addr_element = document.getElementById("lookupAddr");
+      self.updateLookupUrl(result[1]);
+      addr_element.value = result[0];
     }).catch(function(e) {
       console.log(e);
       self.setLookupStatus("Error looking up name; see log.");
@@ -135,7 +144,7 @@ window.App = {
 
   updateLookupUrl: function(lookupUrl) {
     var url_element = document.getElementById("lookupUrl");
-    url_element.innerHTML = "https://www.reddit.com/r/ethereumproofs/comments/" + lookupUrl;
+    url_element.value = proofUrlPrepend + lookupUrl + proofUrlAppend;
   }
 
 };
@@ -143,7 +152,7 @@ window.App = {
 window.addEventListener('load', function() {
   // Checking if Web3 has been injected by the browser (Mist/MetaMask)
   if (typeof web3 !== 'undefined') {
-    console.warn("Using web3 detected from external source. If you find that your accounts don't appear or you have unexpected results, ensure you've configured that source properly. If using MetaMask, see the following link. Feel free to delete this warning. :) http://truffleframework.com/tutorials/truffle-and-metamask")
+    console.warn("Using web3 detected from external source. If you find that your accounts don't appear or you have unexpected results, ensure you've configured that source properly. If using MetaMask, see the following link. Feel free to delete this warning. :) http://truffleframework.com/tutorials/truffle-and-metamask");
     // Use Mist/MetaMask's provider
     window.web3 = new Web3(web3.currentProvider);
   }
