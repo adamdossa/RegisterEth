@@ -1,5 +1,8 @@
-var RedditRegister = artifacts.require("./RedditRegister.sol");
+var RegistrarFactory = artifacts.require("./RegistrarFactory.sol");
+var RedditRegistry = artifacts.require("./RedditRegistry.sol");
 
 module.exports = function(deployer) {
-  deployer.deploy(RedditRegister);
+  deployer.deploy(RegistrarFactory);
+  deployer.link(RegistrarFactory, RedditRegistry);
+  deployer.deploy(RedditRegistry);
 };
