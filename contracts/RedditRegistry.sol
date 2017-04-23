@@ -43,7 +43,7 @@ contract RedditRegistry is RegistryI, Ownable {
         return;
       }
 
-      return registrar.register(_proof);
+      return registrar.register(_proof, _addr);
 
   }
 

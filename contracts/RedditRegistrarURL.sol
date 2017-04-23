@@ -4,7 +4,7 @@ import "../installed_contracts/oraclize/contracts/usingOraclize.sol";
 import '../installed_contracts/zeppelin/contracts/ownership/Ownable.sol';
 
 contract RegistrarI {
-  function register(string _proof) payable returns(bytes32 oracleId);
+  function register(string _proof, address _addr) payable returns(bytes32 oracleId);
   function _register(bytes32 oracleId, address expectedAddress, string proof);
   function _callback(bytes32 _id, string _result);
   //Could factor out below into "OraclizeRegistrarI is RegistrarI"
@@ -74,7 +74,7 @@ contract RedditRegistrarURL is RegistrarI, Ownable, usingOraclize {
 
   }
 
-  function register(string _proof) payable onlyOwner returns(bytes32 oracleId) {
+  function register(string _proof, address _addr) payable onlyOwner returns(bytes32 oracleId) {
 
     uint oraclePrice = oraclize_getPrice("URL", oraclizeGasLimit);
     if (oraclePrice > this.balance) {
@@ -85,7 +85,7 @@ contract RedditRegistrarURL is RegistrarI, Ownable, usingOraclize {
     string memory oracleQuery = strConcat(queryUrlPrepend, _proof, queryUrlAppend);
     oracleId = oraclize_query("URL", oracleQuery, oraclizeGasLimit);
     OracleQuerySent(oracleQuery, oracleId);
-    _register(oracleId, msg.sender, _proof);
+    _register(oracleId, _addr, _proof);
     return oracleId;
 
   }
