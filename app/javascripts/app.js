@@ -41,8 +41,14 @@ window.App = {
 
       accounts = accs;
       account = accounts[0];
+      self.refreshLink(account);
       self.refreshRegister(account);
     });
+  },
+
+  refreshLink: function(account) {
+    var reddit_link = document.getElementById("redditLink");
+    reddit_link.href = "https://www.reddit.com/r/ethereumproofs/submit?selftext=true&title=" + account;
   },
 
   setRegisterStatus: function(message) {

@@ -6,28 +6,95 @@
   <script src="./app.js"></script>
 </head>
 <body>
-  <h1>RedditRegister</h1>
+  <h1>RedditRegister (testnet)</h1>
   <h2>Link your Reddit username to your Ethereum address</h2>
-  <h3>You have <span class="black" id="name"></span> currently registered to your Ethereum address</h3>
-  <h3>URL Proof is at: <span class="black" id="proofUrl"></span></h3>
-  <h3 class="black">Register here:</h3>
-  <label for="addr">Ethereum Address: </label><input class="black" id="addr"></input>
-  <br><br>
-  <label for="proof">Proof Hash: </label><input type="text" id="proof" placeholder="e.g. 66cvut"></input>
-  <br><br>
-  <button id="register" onclick="App.register()">Register</button><span class="status" id="registerStatus"></span>
   <br>
-
-  <br><br><br>
-  <h3 class="black">Lookup here:</h3>
-  <label for="lookupProofUrl">URL Proof is at: </label><input class="black" id="lookupProofUrl"></input>
-  <br><br>
-  <label for="lookupAddr">Ethereum Address: </label><input class="black" id="lookupAddr"></input>
-  <button id="lookupAddrButton" onclick="App.lookupAddr()">Lookup Address</button>
-  <br><br>
-  <label for="lookupName">Reddit Username: </label><input class="black" id="lookupName"></input>
-  <button id="lookupNameButton" onclick="App.lookupName()">Lookup Name</button>
-  <br>
-  <span id="lookupStatus"></span>
+  <span class="grey">Scroll down for instructions</span>
+  <div class="">
+    <h3>You have <span class="black" id="name"></span> currently registered to your Ethereum address</h3>
+    <h3>URL Proof is at: <span class="black" id="proofUrl"></span></h3>
+  </div>
+  <div class="border">
+    <h3 class="black">Register here:</h3>
+    <label for="addr">Ethereum Address: </label><input class="black" id="addr"></input>
+    <br><br>
+    <label for="proof">Proof Hash: </label><input type="text" id="proof" placeholder="e.g. 66cvut"></input>
+    <br><br>
+    <button id="register" onclick="App.register()">Register</button><span class="status" id="registerStatus"></span>
+  </div>
+  <div class="border">
+    <h3 class="black">Lookup here:</h3>
+    <label for="lookupProofUrl">URL Proof is at: </label><input class="black" id="lookupProofUrl"></input>
+    <br><br>
+    <label for="lookupAddr">Ethereum Address: </label><input class="black" id="lookupAddr"></input>
+    <button id="lookupAddrButton" onclick="App.lookupAddr()">Lookup Address</button>
+    <br><br>
+    <label for="lookupName">Reddit Username: </label><input class="black" id="lookupName"></input>
+    <button id="lookupNameButton" onclick="App.lookupName()">Lookup Name</button><span class="status" id="lookupStatus"></span>
+  </div>
+  <div class="border">
+    <h3 class="black">Instructions:</h3>
+    <label >Setup: </label>
+    <br><br>
+    <span class="black">
+      You need MetaMask!
+      <a href="https://chrome.google.com/webstore/detail/nkbihfbeogaeaoehlefnkodbefgpgknn" class="cta" target="_blank">Get Chrome Plugin</a>
+    </span>
+    <br><br>
+    <label >Registration: </label>
+    <br><br>
+    <span class="black">
+      The smart contract uses Oraclize to verify that there is a post on /r/ethereumproofs from the address in the "Register here" box.
+      <br><br>
+      The reddit username "nominates" a specific blockchain address by posting it to the forum, and that blockchain address "nominates" the reddit post by sending Reddit's hash of the posts URL to the smart contract.
+      <br><br>
+      The "Reddit's hash" in the above corresponds to the <span class="red">66cvut</span> in the example URL below.:
+      <br><br>
+      <a href="https://www.reddit.com/r/ethereumproofs/comments/66cvut/0x85523d0f76b3a6c3c05b2cfbb0558b45541f100b/" target="_blank">
+        /r/ethereumproofs/comments/66cvut/0x85523d0f76b3a6c3c05b2cfbb0558b45541f100b
+      </a>
+      <br><br>
+      <a id="redditLink" href="https://www.reddit.com/r/ethereumproofs/submit?selftext=true" target="_blank">
+        You can post your proof to /r/ethereumproofs by clicking here!
+      </a>
+    </span>
+    <br><br>
+    <label >Lookup: </label>
+    <br><br>
+    <span class="black">
+      You can query a Ethereum blockchain address or Reddit username here. Populating one and pressing the corresponding button will populate the other, as well as showinng the corresponding Reddit post URL.
+    </span>
+    <br><br>
+    <label >NB: </label>
+    <br><br>
+    <span class="black">
+      This contract does not charge for registration, but there is a small fee charged by Oraclize to make the offchain query.
+      <br><br>
+      If too much Ether is sent, the contract will retain the balance and will effectively be used for subsequent registrations should those have a deficit.
+      <br><br>
+      If the sum of the contracts balance (from any prior overpayments) and the value sent to the register function aren't enough for the Oraclize query this Ether is also retained.
+      <br><br>
+      This webpage should automatically calculate the correct amount of Ether to send.
+      <br><br>
+      Sometimes Reddit throttles Oraclize requests. When this happens you'll see an error message stating "Unable to parse Oraclize response". The request can be resent if this happens.
+    </span>
+    <br><br>
+    <label >Code: </label>
+    <br><br>
+    <a href="https://chrome.google.com/webstore/detail/nkbihfbeogaeaoehlefnkodbefgpgknn" class="cta" target="_blank">Get Chrome Plugin</a>
+    <span class="black">
+      <a href="https://github.com/adamdossa/RedditRegistry" target="_blank">
+        Github
+      </a>
+      <br>
+      <a href="https://ropsten.etherscan.io/address/0x293442b5a058a80b2cd5ba6627f7b64695fbd9cb#code" target="_blank">
+        RedditRegistry contract
+      </a>
+      <br>
+      <a href="https://ropsten.etherscan.io/address/0x293442b5a058a80b2cd5ba6627f7b64695fbd9cb#code" target="_blank">
+        RedditRegistrarURL contract
+      </a>
+    </span>
+  </div>
 </body>
 </html>

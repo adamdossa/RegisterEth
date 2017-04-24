@@ -22359,14 +22359,14 @@ module.exports = {
 				}
 			},
 			"links": {
-				"RegistrarFactory": "0x4bec9fe2b4cdd3a3a891da7fca723de1689ecf50"
+				"RegistrarFactory": "0x2f6d92b6b27f3b6b6799bb47e9f5f4bfde903019"
 			},
-			"address": "0x56aca113064daf985c968b1bda7fa16068e08362",
-			"updated_at": 1493065797545
+			"address": "0x293442b5a058a80b2cd5ba6627f7b64695fbd9cb",
+			"updated_at": 1493072448685
 		}
 	},
 	"schema_version": "0.0.5",
-	"updated_at": 1493065797545
+	"updated_at": 1493072448685
 };
 
 /***/ }),
@@ -22522,8 +22522,14 @@ window.App = {
 
       accounts = accs;
       account = accounts[0];
+      self.refreshLink(account);
       self.refreshRegister(account);
     });
+  },
+
+  refreshLink: function(account) {
+    var reddit_link = document.getElementById("redditLink");
+    reddit_link.href = "https://www.reddit.com/r/ethereumproofs/submit?selftext=true&title=" + account;
   },
 
   setRegisterStatus: function(message) {
@@ -25864,7 +25870,7 @@ exports = module.exports = __webpack_require__(81)();
 
 
 // module
-exports.push([module.i, "body {\n  margin-left: 25%;\n  margin-right: 25%;\n  margin-top: 10%;\n  font-family: \"Open Sans\", sans-serif;\n}\n\nlabel {\n  display: inline-block;\n  width: 100px;\n}\n\ninput {\n  width: 500px;\n  padding: 5px;\n  font-size: 16px;\n}\n\nbutton {\n  font-size: 16px;\n  padding: 5px;\n}\n\nh1, h2 {\n  display: inline-block;\n  vertical-align: middle;\n  margin-top: 0px;\n  margin-bottom: 10px;\n}\n\nh2 {\n  color: #AAA;\n  font-size: 32px;\n}\n\nh3 {\n  font-weight: normal;\n  color: #AAA;\n  font-size: 24px;\n}\n\nlabel {\n  color: blue;\n  width: 150px;\n}\n\n.status {\n  float:right;\n}\n\n.black {\n  color: black;\n}\n\n.grey {\n  color: #AAA;\n}\n\n#balance {\n  color: black;\n}\n\n.hint {\n  color: #666;\n}\n", ""]);
+exports.push([module.i, "body {\n  margin-left: 25%;\n  margin-right: 25%;\n  margin-top: 10%;\n  font-family: \"Open Sans\", sans-serif;\n}\n\nlabel {\n  display: inline-block;\n  width: 100px;\n}\n\ninput {\n  width: 500px;\n  padding: 5px;\n  font-size: 16px;\n}\n\nbutton {\n  font-size: 16px;\n  padding: 5px;\n}\n\nh1, h2 {\n  display: inline-block;\n  vertical-align: middle;\n  margin-top: 0px;\n  margin-bottom: 10px;\n}\n\nh2 {\n  color: #AAA;\n  font-size: 32px;\n}\n\nh3 {\n  font-weight: normal;\n  color: #AAA;\n  font-size: 24px;\n}\n\nlabel {\n  color: blue;\n  width: 150px;\n}\n\n.status {\n  float:right;\n}\n\n.black {\n  color: black;\n}\n\n.red {\n  color: red;\n}\n\n.grey {\n  color: #AAA;\n}\n\n.hint {\n  color: #666;\n}\n\n.border {\n  border:1px solid black;\n  padding: 10px;\n  margin: 10px;\n}\n", ""]);
 
 // exports
 
