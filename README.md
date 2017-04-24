@@ -6,6 +6,10 @@
 1. Run `truffle compile`, then run `truffle migrate` to deploy the contracts onto testrpc network.
 1. Then run `truffle test` to run tests.
 
+## Frontend
+
+* GUI deployed at: https://ipfs.io/ipfs/QmYVf5Txda4uxGoPuAqCCMfYuy5PCD9qt6GJNXiVEJpDN6/
+
 ## Some notes
 
 * The register function requires payment in order to fund the Oraclize queries. If the RedditRegister contract does not have sufficient funds it will return false. Excess or insufficient funds are not returned to the caller, but maintained by the contract to help with future calls. No funds can ever be directly withdrawn from the contract.
