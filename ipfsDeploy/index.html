@@ -13,20 +13,21 @@
   <h3 class="black">Register here:</h3>
   <label for="addr">Ethereum Address: </label><input class="black" id="addr"></input>
   <br><br>
-  <label for="hash">Proof Hash: </label><input type="text" id="hash" placeholder="e.g. 66cvut"></input>
+  <label for="proof">Proof Hash: </label><input type="text" id="proof" placeholder="e.g. 66cvut"></input>
   <br><br>
-  <button id="register" onclick="App.register()">Register</button>
-  <span id="registerStatus"></span>
+  <button id="register" onclick="App.register()">Register</button><span class="status" id="registerStatus"></span>
+  <br>
+
   <br><br><br>
   <h3 class="black">Lookup here:</h3>
-  <label for="lookupUrl">URL Proof is at: </label><input class="black" id="lookupUrl"></input>
+  <label for="lookupProofUrl">URL Proof is at: </label><input class="black" id="lookupProofUrl"></input>
   <br><br>
   <label for="lookupAddr">Ethereum Address: </label><input class="black" id="lookupAddr"></input>
   <button id="lookupAddrButton" onclick="App.lookupAddr()">Lookup Address</button>
   <br><br>
   <label for="lookupName">Reddit Username: </label><input class="black" id="lookupName"></input>
   <button id="lookupNameButton" onclick="App.lookupName()">Lookup Name</button>
-  <br><br>
+  <br>
   <span id="lookupStatus"></span>
 </body>
 </html>

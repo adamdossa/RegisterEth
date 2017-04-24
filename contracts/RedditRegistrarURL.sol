@@ -5,41 +5,50 @@ import '../installed_contracts/zeppelin/contracts/ownership/Ownable.sol';
 
 contract RegistrarI {
   function register(string _proof, address _addr) payable returns(bytes32 oracleId);
+  function getCost() constant returns (uint cost);
+  //Below functions used for testing and internally
   function _register(bytes32 oracleId, address expectedAddress, string proof);
   function _callback(bytes32 _id, string _result);
-  //Could factor out below into "OraclizeRegistrarI is RegistrarI"
   function _clearOracleId(bytes32 oracleId);
 }
 
 contract RegistryI {
-  function update(string _name, address _addr, string _proof) returns(bool success);
+  function update(string _name, address _addr, string _proof);
+  function error(bytes32 _id, address _addr, string _result, string _message);
 }
 
 contract RedditRegistrarURL is RegistrarI, Ownable, usingOraclize {
 
   event OracleQueryReceived(string _result, bytes32 _id);
   event OracleQuerySent(string _url, bytes32 _id);
-  event AddressMismatch(address _actual, address _expected);
-  event InsufficientFunds(uint _funds, uint _cost);
+  event AddressMismatch(address _oracleAddr, address _addr);
   event BadOracleResult(string _message, string _result, bytes32 _id);
 
   mapping (bytes32 => address) oracleExpectedAddress;
   mapping (bytes32 => string) oracleProof;
   mapping (bytes32 => bool) oracleCallbackComplete;
 
-  uint oraclizeGasLimit = 220000;
+  uint oraclizeGasLimit = 280000;
 
+  //json(https://www.reddit.com/r/ethereumproofs/comments/66xvua.json).0.data.children.0.data.[author,title]
   string queryUrlPrepend = 'json(https://www.reddit.com/r/ethereumproofs/comments/';
   string queryUrlAppend = '.json).0.data.children.0.data.[author,title]';
 
   RegistryI registry;
 
+  modifier onlyOraclizeOrOwner() {
+    if ((msg.sender != owner) && (msg.sender != oraclize_cbAddress())) {
+      throw;
+    }
+    _;
+  }
+
   function RedditRegistrarURL() {
     registry = RegistryI(msg.sender);
   }
 
-  function getOraclePrice() public constant returns(uint price) {
-    price = oraclize_getPrice("URL", oraclizeGasLimit);
+  function getCost() onlyOwner public constant returns(uint cost) {
+    return oraclize_getPrice("URL", oraclizeGasLimit);
   }
 
   function __callback(bytes32 _id, string _result) {
@@ -49,7 +58,7 @@ contract RedditRegistrarURL is RegistrarI, Ownable, usingOraclize {
     _callback(_id, _result);
   }
 
-  function _callback(bytes32 _id, string _result) onlyOwner {
+  function _callback(bytes32 _id, string _result) onlyOraclizeOrOwner {
 
     //Record callback received
     oracleCallbackComplete[_id] = true;
@@ -59,28 +68,22 @@ contract RedditRegistrarURL is RegistrarI, Ownable, usingOraclize {
     var (success, redditName, redditAddrString) = parseResult(_result);
     if (!success) {
       BadOracleResult("Incorrect length data returned from Oracle", _result, _id);
-      return;
+      registry.error(_id, oracleExpectedAddress[_id], _result, "Unable to parse Oraclize response");
+    } else {
+      //Check validity of claim to address
+      address redditAddr = parseAddr(redditAddrString);
+      if (oracleExpectedAddress[_id] != redditAddr) {
+        AddressMismatch(redditAddr, oracleExpectedAddress[_id]);
+        registry.error(_id, oracleExpectedAddress[_id], _result, "Address mismatch");
+      } else {
+        //We can now update our registry!!!
+        registry.update(redditName, redditAddr, oracleProof[_id]);
+      }
     }
-
-    //Check validity of claim to address
-    address redditAddr = parseAddr(redditAddrString);
-    if (oracleExpectedAddress[_id] != redditAddr) {
-      AddressMismatch(oracleExpectedAddress[_id], redditAddr);
-      return;
-    }
-
-    //We can now update our registry!!!
-    registry.update(redditName, redditAddr, oracleProof[_id]);
 
   }
 
   function register(string _proof, address _addr) payable onlyOwner returns(bytes32 oracleId) {
-
-    uint oraclePrice = oraclize_getPrice("URL", oraclizeGasLimit);
-    if (oraclePrice > this.balance) {
-      InsufficientFunds(this.balance, oraclePrice);
-      return;
-    }
 
     string memory oracleQuery = strConcat(queryUrlPrepend, _proof, queryUrlAppend);
     oracleId = oraclize_query("URL", oracleQuery, oraclizeGasLimit);

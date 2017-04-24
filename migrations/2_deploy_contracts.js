@@ -6,3 +6,8 @@ module.exports = function(deployer) {
   deployer.link(RegistrarFactory, RedditRegistry);
   deployer.deploy(RedditRegistry);
 };
+// var OraclizeAPI = artifacts.require("./OraclizeAPI.sol");
+//
+// module.exports = function(deployer) {
+//   deployer.deploy(OraclizeAPI);
+// };

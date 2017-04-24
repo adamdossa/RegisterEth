@@ -44,6 +44,10 @@ label {
   width: 150px;
 }
 
+.status {
+  float:right;
+}
+
 .black {
   color: black;
 }

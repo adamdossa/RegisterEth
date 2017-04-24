@@ -6,10 +6,10 @@ import { default as Web3} from 'web3';
 import { default as contract } from 'truffle-contract'
 
 // Import our contract artifacts and turn them into usable abstractions.
-import redditRegister_artifacts from '../../build/contracts/RedditRegister.json'
+import redditRegistry_artifacts from '../../build/contracts/RedditRegistry.json'
 
-// RedditRegister is our usable abstraction, which we'll use through the code below.
-var RedditRegister = contract(redditRegister_artifacts);
+// RedditRegistry is our usable abstraction, which we'll use through the code below.
+var RedditRegistry = contract(redditRegistry_artifacts);
 
 var accounts;
 var account;
@@ -21,8 +21,8 @@ window.App = {
   start: function() {
     var self = this;
 
-    // Bootstrap the RedditRegister abstraction for use.
-    RedditRegister.setProvider(web3.currentProvider);
+    // Bootstrap the RedditRegistry abstraction for use.
+    RedditRegistry.setProvider(web3.currentProvider);
     self.refreshAccount();
   },
 
@@ -41,8 +41,7 @@ window.App = {
 
       accounts = accs;
       account = accounts[0];
-      self.setAddress(account);
-      self.refreshName();
+      self.refreshRegister(account);
     });
   },
 
@@ -61,11 +60,14 @@ window.App = {
     addr_element.value = addr;
   },
 
-  refreshName: function() {
-    var self = this;
+  refreshRegister: function(account) {
 
+    var self = this;
     var redditRegister;
-    RedditRegister.deployed().then(function(instance) {
+
+    self.setAddress(account);
+
+    RedditRegistry.deployed().then(function(instance) {
       redditRegister = instance;
       return redditRegister.lookupAddr.call(account, {from: account});
     }).then(function(result) {
@@ -78,10 +80,51 @@ window.App = {
         name_element.innerHTML = result[0];
         proofUrl_element.innerHTML = proofUrlPrepend + result[1] + proofUrlAppend;
       }
+    }).then(function() {
+
+      var registerEventBlockNumber = 0;
+
+      var nameAddressProofEvent = redditRegister.NameAddressProofRegistered({_addr: account}, {fromBlock: 0, toBlock: 'latest'});
+      nameAddressProofEvent.watch(function(error, result){
+        if (result.blockNumber >= registerEventBlockNumber) {
+          self.setRegisterStatus(result.event);
+          registerEventBlockNumber = result.blockNumber;
+        }
+        console.log(result.args);
+      });
+
+      var addressMismatchEvent = redditRegister.AddressMismatch({_addr: account}, {fromBlock: 0, toBlock: 'latest'});
+      addressMismatchEvent.watch(function(error, result){
+        if (result.blockNumber >= registerEventBlockNumber) {
+          self.setRegisterStatus(result.event);
+          registerEventBlockNumber = result.blockNumber;
+        }
+        console.log(result.args);
+      });
+
+      var registrationSentEvent = redditRegister.RegistrationSent({_addr: account}, {fromBlock: 0, toBlock: 'latest'});
+      registrationSentEvent.watch(function(error, result){
+        if (result.blockNumber >= registerEventBlockNumber) {
+          self.setRegisterStatus(result.event);
+          registerEventBlockNumber = result.blockNumber;
+        }
+        console.log(result.args);
+      });
+
+      var registrarErrorEvent  = redditRegister.RegistrarError({_addr: account}, {fromBlock: 0, toBlock: 'latest'});
+      registrarErrorEvent.watch(function(error, result){
+        if (result.blockNumber >= registerEventBlockNumber) {
+          self.setRegisterStatus(result.event + ": " + result.args["_message"]);
+          registerEventBlockNumber = result.blockNumber;
+        }
+        console.log(result.args);
+      });
+
     }).catch(function(e) {
       console.log(e);
       self.setRegisterStatus("Error getting reddit name; see log.");
     });
+
   },
 
   register: function() {
@@ -91,17 +134,11 @@ window.App = {
     var proof = document.getElementById("proof").value;
 
     var redditRegister;
-    RedditRegister.deployed().then(function(instance) {
+    RedditRegistry.deployed().then(function(instance) {
       redditRegister = instance;
-      return redditRegister.getOraclePrice.call({from: account});
+      return redditRegister.getCost.call({from: account});
     }).then(function(price) {
       return redditRegister.register(proof, addr, {from: account, value: price.toNumber()});
-    }).then(function(result) {
-      for (var i = 0; i < result.logs.length; i++) {
-        var log = result.logs[i];
-        console.log(log);
-        self.setRegisterStatus(log.event);
-      }
     }).catch(function(e) {
       console.log(e);
       self.setRegisterStatus("Error registering; see log.");
@@ -112,7 +149,7 @@ window.App = {
     var self = this;
     var addr = document.getElementById("lookupAddr").value;
     var redditRegister;
-    RedditRegister.deployed().then(function(instance) {
+    RedditRegistry.deployed().then(function(instance) {
       redditRegister = instance;
       return redditRegister.lookupAddr.call(addr, {from: account});
     }).then(function(result) {
@@ -129,7 +166,7 @@ window.App = {
     var self = this;
     var name = document.getElementById("lookupName").value;
     var redditRegister;
-    RedditRegister.deployed().then(function(instance) {
+    RedditRegistry.deployed().then(function(instance) {
       redditRegister = instance;
       return redditRegister.lookupName.call(name, {from: account});
     }).then(function(result) {
@@ -144,6 +181,9 @@ window.App = {
 
   updateLookupProofUrl: function(lookupProofUrl) {
     var url_element = document.getElementById("lookupProofUrl");
+    if (lookupProofUrl === "") {
+      url_element.value = "https://";
+    }
     url_element.value = proofUrlPrepend + lookupProofUrl + proofUrlAppend;
   }
 
@@ -152,7 +192,6 @@ window.App = {
 window.addEventListener('load', function() {
   // Checking if Web3 has been injected by the browser (Mist/MetaMask)
   if (typeof web3 !== 'undefined') {
-    console.warn("Using web3 detected from external source. If you find that your accounts don't appear or you have unexpected results, ensure you've configured that source properly. If using MetaMask, see the following link. Feel free to delete this warning. :) http://truffleframework.com/tutorials/truffle-and-metamask");
     // Use Mist/MetaMask's provider
     window.web3 = new Web3(web3.currentProvider);
   }

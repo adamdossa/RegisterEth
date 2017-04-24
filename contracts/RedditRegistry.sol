@@ -8,8 +8,11 @@ import "./RegistrarFactory.sol";
 
 contract RedditRegistry is RegistryI, Ownable {
 
+  event RegistrationSent(string _proof, address _addr, bytes32 _id);
   event NameAddressProofRegistered(string _name, address _addr, string _proof);
-  event AddressMismatch(address _actual, address _expected);
+  event RegistrarError(address _addr, bytes32 _id, string _result, string _message);
+  event AddressMismatch(address _actual, address _addr);
+  event InsufficientFunds(uint _funds, uint _cost, address _addr);
 
   mapping (address => string) addrToName;
   mapping (string => address) nameToAddr;
@@ -43,17 +46,32 @@ contract RedditRegistry is RegistryI, Ownable {
         return;
       }
 
-      return registrar.register(_proof, _addr);
+      uint cost = registrar.getCost();
+      if (cost > this.balance) {
+        InsufficientFunds(this.balance, cost, _addr);
+        return;
+      }
+
+      bytes32 id = registrar.register.value(this.balance)(_proof, _addr);
+      RegistrationSent(_proof, _addr, id);
+      return id;
 
   }
 
-  function update(string _name, address _addr, string _proof) onlyRegistrar returns(bool success) {
+  function getCost() public payable returns(uint cost) {
+    return registrar.getCost();
+  }
+
+  function update(string _name, address _addr, string _proof) onlyRegistrar {
     addrToName[_addr] = _name;
     nameToAddr[_name] = _addr;
     addrToProof[_addr] = _proof;
     nameToProof[_name] = _proof;
     NameAddressProofRegistered(_name, _addr, _proof);
-    return true;
+  }
+
+  function error(bytes32 _id, address _addr, string _result, string _message) onlyRegistrar {
+    RegistrarError(_addr, _id, _result, _message);
   }
 
 }
