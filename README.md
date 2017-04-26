@@ -5,6 +5,7 @@
 1. Start testrpc using `testrpc --gasLimit 10000000`. Larger gas is needed to execute test contract.
 1. Run `truffle compile`, then run `truffle migrate` to deploy the contracts onto testrpc network.
 1. Then run `truffle test` to run tests.
+1. To run the basic web frontend, you can run `npm run dev`.
 
 ## Frontend
 
