@@ -8,11 +8,11 @@ import "./RegistrarFactory.sol";
 
 contract RedditRegistry is RegistryI, Ownable {
 
-  event RegistrationSent(string _proof, address _addr, bytes32 _id);
-  event NameAddressProofRegistered(string _name, address _addr, string _proof);
-  event RegistrarError(address _addr, bytes32 _id, string _result, string _message);
-  event AddressMismatch(address _actual, address _addr);
-  event InsufficientFunds(uint _funds, uint _cost, address _addr);
+  event RegistrationSent(string _proof, address indexed _addr, bytes32 _id);
+  event NameAddressProofRegistered(string _name, address indexed _addr, string _proof);
+  event RegistrarError(address indexed _addr, bytes32 _id, string _result, string _message);
+  event AddressMismatch(address _actual, address indexed _addr);
+  event InsufficientFunds(uint _funds, uint _cost, address indexed _addr);
 
   mapping (address => string) addrToName;
   mapping (string => address) nameToAddr;
