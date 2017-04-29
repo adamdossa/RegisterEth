@@ -22522,12 +22522,14 @@ window.App = {
 
       accounts = accs;
       account = accounts[0];
-      self.refreshLink(account);
-      self.refreshRegister(account);
+      self.watchEvents()
+      self.refreshLink();
+      self.refreshRegister();
     });
   },
 
-  refreshLink: function(account) {
+  refreshLink: function() {
+    var self = this;
     var reddit_link = document.getElementById("redditLink");
     reddit_link.href = "https://www.reddit.com/r/ethereumproofs/submit?selftext=true&title=" + account;
   },
@@ -22547,60 +22549,50 @@ window.App = {
     addr_element.value = addr;
   },
 
-  refreshRegister: function(account) {
+  watchEvents: function() {
 
-    var self = this;
-    var redditRegister;
-
-    self.setAddress(account);
+    var registerEventBlockNumber = 0;
+    var redditRegistry;
 
     RedditRegistry.deployed().then(function(instance) {
-      redditRegister = instance;
-      return redditRegister.lookupAddr.call(account, {from: account});
+      redditRegistry = instance;
+      return redditRegistry.lookupAddr.call(account, {from: account});
     }).then(function(result) {
-      var name_element = document.getElementById("name");
-      var proofUrl_element = document.getElementById("proofUrl");
-      if (result[0] === "") {
-        name_element.innerHTML = "nothing";
-        proofUrl_element.innerHTML = "https://";
-      } else {
-        name_element.innerHTML = result[0];
-        proofUrl_element.innerHTML = proofUrlPrepend + result[1] + proofUrlAppend;
-      }
-    }).then(function() {
 
-      var registerEventBlockNumber = 0;
-
-      var nameAddressProofEvent = redditRegister.NameAddressProofRegistered({_addr: account}, {fromBlock: 0, toBlock: 'latest'});
+      var nameAddressProofEvent = redditRegistry.NameAddressProofRegistered({_addr: account}, {fromBlock: 0, toBlock: 'latest'});
       nameAddressProofEvent.watch(function(error, result){
         if (result.blockNumber >= registerEventBlockNumber) {
+          self.refreshRegister();
           self.setRegisterStatus(result.event);
           registerEventBlockNumber = result.blockNumber;
         }
         console.log(result.args);
       });
 
-      var addressMismatchEvent = redditRegister.AddressMismatch({_addr: account}, {fromBlock: 0, toBlock: 'latest'});
+      var addressMismatchEvent = redditRegistry.AddressMismatch({_addr: account}, {fromBlock: 0, toBlock: 'latest'});
       addressMismatchEvent.watch(function(error, result){
         if (result.blockNumber >= registerEventBlockNumber) {
+          self.refreshRegister();
           self.setRegisterStatus(result.event);
           registerEventBlockNumber = result.blockNumber;
         }
         console.log(result.args);
       });
 
-      var registrationSentEvent = redditRegister.RegistrationSent({_addr: account}, {fromBlock: 0, toBlock: 'latest'});
+      var registrationSentEvent = redditRegistry.RegistrationSent({_addr: account}, {fromBlock: 0, toBlock: 'latest'});
       registrationSentEvent.watch(function(error, result){
         if (result.blockNumber >= registerEventBlockNumber) {
+          self.refreshRegister();
           self.setRegisterStatus(result.event);
           registerEventBlockNumber = result.blockNumber;
         }
         console.log(result.args);
       });
 
-      var registrarErrorEvent  = redditRegister.RegistrarError({_addr: account}, {fromBlock: 0, toBlock: 'latest'});
+      var registrarErrorEvent  = redditRegistry.RegistrarError({_addr: account}, {fromBlock: 0, toBlock: 'latest'});
       registrarErrorEvent.watch(function(error, result){
         if (result.blockNumber >= registerEventBlockNumber) {
+          self.refreshRegister();
           self.setRegisterStatus(result.event + ": " + result.args["_message"]);
           registerEventBlockNumber = result.blockNumber;
         }
@@ -22614,18 +22606,45 @@ window.App = {
 
   },
 
+  refreshRegister: function() {
+
+    var self = this;
+    var redditRegistry;
+
+    self.setAddress(account);
+
+    RedditRegistry.deployed().then(function(instance) {
+      redditRegistry = instance;
+      return redditRegistry.lookupAddr.call(account, {from: account});
+    }).then(function(result) {
+      var name_element = document.getElementById("name");
+      var proofUrl_element = document.getElementById("proofUrl");
+      if (result[0] === "") {
+        name_element.innerHTML = "nothing";
+        proofUrl_element.innerHTML = "https://";
+      } else {
+        name_element.innerHTML = result[0];
+        proofUrl_element.innerHTML = proofUrlPrepend + result[1] + proofUrlAppend;
+      }
+    }).catch(function(e) {
+      console.log(e);
+      self.setRegisterStatus("Error getting reddit name; see log.");
+    });
+
+  },
+
   register: function() {
     var self = this;
 
     var addr = document.getElementById("addr").value;
     var proof = document.getElementById("proof").value;
 
-    var redditRegister;
+    var redditRegistry;
     RedditRegistry.deployed().then(function(instance) {
-      redditRegister = instance;
-      return redditRegister.getCost.call({from: account});
+      redditRegistry = instance;
+      return redditRegistry.getCost.call({from: account});
     }).then(function(price) {
-      return redditRegister.register(proof, addr, {from: account, value: price.toNumber()});
+      return redditRegistry.register(proof, addr, {from: account, value: price.toNumber()});
     }).catch(function(e) {
       console.log(e);
       self.setRegisterStatus("Error registering; see log.");
@@ -22635,10 +22654,10 @@ window.App = {
   lookupAddr: function() {
     var self = this;
     var addr = document.getElementById("lookupAddr").value;
-    var redditRegister;
+    var redditRegistry;
     RedditRegistry.deployed().then(function(instance) {
-      redditRegister = instance;
-      return redditRegister.lookupAddr.call(addr, {from: account});
+      redditRegistry = instance;
+      return redditRegistry.lookupAddr.call(addr, {from: account});
     }).then(function(result) {
       var name_element = document.getElementById("lookupName");
       self.updateLookupProofUrl(result[1]);
@@ -22652,10 +22671,10 @@ window.App = {
   lookupName: function() {
     var self = this;
     var name = document.getElementById("lookupName").value;
-    var redditRegister;
+    var redditRegistry;
     RedditRegistry.deployed().then(function(instance) {
-      redditRegister = instance;
-      return redditRegister.lookupName.call(name, {from: account});
+      redditRegistry = instance;
+      return redditRegistry.lookupName.call(name, {from: account});
     }).then(function(result) {
       var addr_element = document.getElementById("lookupAddr");
       self.updateLookupProofUrl(result[1]);
