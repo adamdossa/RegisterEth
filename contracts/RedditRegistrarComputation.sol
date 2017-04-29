@@ -6,10 +6,10 @@ import '../installed_contracts/zeppelin/contracts/ownership/Ownable.sol';
 import "./RegistrarI.sol";
 import "./RegistryI.sol";
 
-contract RedditRegistrarURL is RegistrarI, Ownable, usingOraclize {
+contract RedditRegistrarComputation is RegistrarI, Ownable, usingOraclize {
 
   event OracleQueryReceived(string _result, bytes32 _id);
-  event OracleQuerySent(string _url, bytes32 _id);
+  event OracleQuerySent(string _ipfsComputation, string _proof, bytes32 _id);
   event AddressMismatch(address _oracleAddr, address _addr);
   event BadOracleResult(string _message, string _result, bytes32 _id);
 
@@ -17,11 +17,9 @@ contract RedditRegistrarURL is RegistrarI, Ownable, usingOraclize {
   mapping (bytes32 => string) oracleProof;
   mapping (bytes32 => bool) oracleCallbackComplete;
 
-  uint oraclizeGasLimit = 280000;
+  string ipfsComputation = "QmVRZS1H1ch3ww1MQXEGtgrfs4UXorwBzBxkkjkKPfM2nN";
 
-  //json(https://www.reddit.com/r/ethereumproofs/comments/66xvua.json).0.data.children.0.data.[author,title]
-  string queryUrlPrepend = 'json(https://www.reddit.com/r/ethereumproofs/comments/';
-  string queryUrlAppend = '.json).0.data.children.0.data.[author,title]';
+  uint oraclizeGasLimit = 280000;
 
   RegistryI registry;
 
@@ -32,12 +30,12 @@ contract RedditRegistrarURL is RegistrarI, Ownable, usingOraclize {
     _;
   }
 
-  function RedditRegistrarURL() {
+  function RedditRegistrarComputation() {
     registry = RegistryI(msg.sender);
   }
 
   function getCost() onlyOwner public constant returns(uint cost) {
-    return oraclize_getPrice("URL", oraclizeGasLimit);
+    return oraclize_getPrice("computation", oraclizeGasLimit);
   }
 
   function __callback(bytes32 _id, string _result) {
@@ -74,9 +72,8 @@ contract RedditRegistrarURL is RegistrarI, Ownable, usingOraclize {
 
   function register(string _proof, address _addr) payable onlyOwner returns(bytes32 oracleId) {
 
-    string memory oracleQuery = strConcat(queryUrlPrepend, _proof, queryUrlAppend);
-    oracleId = oraclize_query("URL", oracleQuery, oraclizeGasLimit);
-    OracleQuerySent(oracleQuery, oracleId);
+    oracleId = oraclize_query("computation", [ipfsComputation, _proof], oraclizeGasLimit);
+    OracleQuerySent(ipfsComputation, _proof, oracleId);
     _register(oracleId, _addr, _proof);
     return oracleId;
 
