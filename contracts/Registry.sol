@@ -7,7 +7,7 @@ import "./RegistryI.sol";
 import "./RegistrarI.sol";
 import "./RegistrarFactory.sol";
 
-contract RedditRegistry is RegistryI, Ownable {
+contract Registry is RegistryI, Ownable {
 
   event RegistrationSent(string _proof, address indexed _addr, bytes32 _id);
   event NameAddressProofRegistered(string _name, address indexed _addr, string _proof);
@@ -15,20 +15,32 @@ contract RedditRegistry is RegistryI, Ownable {
   event AddressMismatch(address _actual, address indexed _addr);
   event InsufficientFunds(uint _funds, uint _cost, address indexed _addr);
 
+  enum RegistrarType {
+    REDDIT,
+    GITHUB
+  }
+
   mapping (address => string) addrToName;
   mapping (string => address) nameToAddr;
   mapping (address => string) addrToProof;
   mapping (string => string) nameToProof;
 
-  RegistrarI registrar;
+  RegistrarI[] registrars;
 
   modifier onlyRegistrar {
-    if (msg.sender != address(registrar)) throw;
-      _;
+    bool isRegistrar = false;
+    for (uint i = 0; i < registrars.length; i++) {
+      if (msg.sender == registrars[i]) {
+        isRegistrar = true;
+      }
+    }
+    if (!registrar) throw;
+    _;
   }
 
-  function RedditRegistry() {
-    registrar = RegistrarFactory.newComputationRegistrar();
+  function Registry() {
+    registrars[uint(RegistrarType.REDDIT)] = RegistrarFactory.newComputationRegistrar();
+    registrars[uint(RegistrarType.GITHUB)] = RegistrarFactory.newURLRegistrar();
   }
 
   function lookupAddr(address _addr) public constant returns(string name, string proof) {

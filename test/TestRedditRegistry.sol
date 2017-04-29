@@ -3,9 +3,9 @@ pragma solidity ^0.4.8;
 import "truffle/Assert.sol";
 import "truffle/DeployedAddresses.sol";
 
-import "../contracts/RedditRegistry.sol";
+import "../contracts/Registry.sol";
 
-contract TestRedditRegistry is RedditRegistry {
+contract TestRedditRegistry is Registry {
 
   string proof_1 = "proof_1";
   address addr_1 = 0x9a9d8ff9854a2722a76a99de6c1bb71d93898ef5;

@@ -6,10 +6,10 @@ import { default as Web3} from 'web3';
 import { default as contract } from 'truffle-contract'
 
 // Import our contract artifacts and turn them into usable abstractions.
-import redditRegistry_artifacts from '../../build/contracts/RedditRegistry.json'
+import registry_artifacts from '../../build/contracts/Registry.json'
 
-// RedditRegistry is our usable abstraction, which we'll use through the code below.
-var RedditRegistry = contract(redditRegistry_artifacts);
+// Registry is our usable abstraction, which we'll use through the code below.
+var Registry = contract(registry_artifacts);
 
 var accounts;
 var account;
@@ -21,8 +21,8 @@ window.App = {
   start: function() {
     var self = this;
 
-    // Bootstrap the RedditRegistry abstraction for use.
-    RedditRegistry.setProvider(web3.currentProvider);
+    // Bootstrap the Registry abstraction for use.
+    Registry.setProvider(web3.currentProvider);
     self.refreshAccount();
   },
 
@@ -73,7 +73,7 @@ window.App = {
     var registerEventBlockNumber = 0;
     var redditRegistry;
 
-    RedditRegistry.deployed().then(function(instance) {
+    Registry.deployed().then(function(instance) {
       redditRegistry = instance;
       return redditRegistry.lookupAddr.call(account, {from: account});
     }).then(function(result) {
@@ -132,7 +132,7 @@ window.App = {
 
     self.setAddress(account);
 
-    RedditRegistry.deployed().then(function(instance) {
+    Registry.deployed().then(function(instance) {
       redditRegistry = instance;
       return redditRegistry.lookupAddr.call(account, {from: account});
     }).then(function(result) {
@@ -159,7 +159,7 @@ window.App = {
     var proof = document.getElementById("proof").value;
 
     var redditRegistry;
-    RedditRegistry.deployed().then(function(instance) {
+    Registry.deployed().then(function(instance) {
       redditRegistry = instance;
       return redditRegistry.getCost.call({from: account});
     }).then(function(price) {
@@ -174,7 +174,7 @@ window.App = {
     var self = this;
     var addr = document.getElementById("lookupAddr").value;
     var redditRegistry;
-    RedditRegistry.deployed().then(function(instance) {
+    Registry.deployed().then(function(instance) {
       redditRegistry = instance;
       return redditRegistry.lookupAddr.call(addr, {from: account});
     }).then(function(result) {
@@ -191,7 +191,7 @@ window.App = {
     var self = this;
     var name = document.getElementById("lookupName").value;
     var redditRegistry;
-    RedditRegistry.deployed().then(function(instance) {
+    Registry.deployed().then(function(instance) {
       redditRegistry = instance;
       return redditRegistry.lookupName.call(name, {from: account});
     }).then(function(result) {
