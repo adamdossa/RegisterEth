@@ -1,4 +1,6 @@
 var RegistrarFactory = artifacts.require("./RegistrarFactory.sol");
+var RegistrarI = artifacts.require("./RegistrarI.sol");
+var RegistryI = artifacts.require("./RegistryI.sol");
 var RedditRegistry = artifacts.require("./RedditRegistry.sol");
 
 module.exports = function(deployer) {

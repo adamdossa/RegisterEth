@@ -9,7 +9,7 @@
 
 ## Frontend
 
-* GUI deployed at: https://ipfs.io/ipfs/QmaQKposuKhVx1rKU5VVsXuuWjh9Av16T5av9oU5HWUJvE/
+* GUI deployed at: https://ipfs.io/ipfs/QmWjwGvpSSbDLdyAsxut677aPjzh32Sx7NDByygMxCY5Vk/
 
 ## Some notes
 

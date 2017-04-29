@@ -3,7 +3,8 @@ pragma solidity ^0.4.8;
 import "../installed_contracts/oraclize/contracts/usingOraclize.sol";
 import '../installed_contracts/zeppelin/contracts/ownership/Ownable.sol';
 
-import "./RedditRegistrarURL.sol";
+import "./RegistryI.sol";
+import "./RegistrarI.sol";
 import "./RegistrarFactory.sol";
 
 contract RedditRegistry is RegistryI, Ownable {
@@ -27,7 +28,7 @@ contract RedditRegistry is RegistryI, Ownable {
   }
 
   function RedditRegistry() {
-    registrar = RegistrarFactory.newURLRegistrar();
+    registrar = RegistrarFactory.newComputationRegistrar();
   }
 
   function lookupAddr(address _addr) public constant returns(string name, string proof) {
