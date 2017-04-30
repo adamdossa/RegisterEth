@@ -66,7 +66,7 @@ contract RedditRegistrarURL is RegistrarI, Ownable, usingOraclize {
         registry.error(_id, oracleExpectedAddress[_id], _result, "Address mismatch");
       } else {
         //We can now update our registry!!!
-        registry.update(redditName, redditAddr, oracleProof[_id]);
+        registry.update(_id, redditName, redditAddr, oracleProof[_id]);
       }
     }
 
