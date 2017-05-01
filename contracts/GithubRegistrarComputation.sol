@@ -2,15 +2,15 @@ pragma solidity ^0.4.8;
 
 import "./OraclizeRegistrar.sol";
 
-contract RedditRegistrarComputation is RegistrarI, OraclizeRegistrar {
+contract GithubRegistrarComputation is RegistrarI, OraclizeRegistrar {
 
   event OracleQuerySent(string _ipfsComputation, string _proof, bytes32 _id);
 
-  string ipfsComputation = "QmVRZS1H1ch3ww1MQXEGtgrfs4UXorwBzBxkkjkKPfM2nN";
+  string ipfsComputation = "QmaBkAW9fCtGRrPzExXi5ybAFa9hdaeQWfLHyiFK33m5D3";
 
-  uint oraclizeGasLimit = 280000;
+  uint oraclizeGasLimit = 380000;
 
-  function RedditRegistrarComputation(address _registry)
+  function GithubRegistrarComputation(address _registry)
   OraclizeRegistrar(_registry) {
 
   }
