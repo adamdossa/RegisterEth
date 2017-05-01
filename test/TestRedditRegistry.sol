@@ -4,6 +4,8 @@ import "truffle/Assert.sol";
 import "truffle/DeployedAddresses.sol";
 
 import "../contracts/Registry.sol";
+import "../contracts/RedditRegistrarComputation.sol";
+import "../contracts/GithubRegistrarComputation.sol";
 
 contract TestRedditRegistry is Registry {
 
@@ -21,6 +23,13 @@ contract TestRedditRegistry is Registry {
   address emptyAddress = 0x0;
 
   uint8 registrarIndex = 1;
+
+  function beforeAll() {
+    registrars.push(new RedditRegistrarComputation(address(this)));
+    registrarTypes.push("reddit");
+    registrars.push(new GithubRegistrarComputation(address(this)));
+    registrarTypes.push("github");
+  }
 
   function beforeEach() {
 

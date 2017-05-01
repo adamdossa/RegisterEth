@@ -11,6 +11,8 @@ import registry_artifacts from '../../build/contracts/Registry.json'
 // Registry is our usable abstraction, which we'll use through the code below.
 var Registry = contract(registry_artifacts);
 
+var registrarType = 0;
+
 var accounts;
 var account;
 
@@ -41,7 +43,7 @@ window.App = {
 
       accounts = accs;
       account = accounts[0];
-      self.watchEvents()
+      self.watchEvents();
       self.refreshLink();
       self.refreshRegister();
     });
@@ -72,12 +74,8 @@ window.App = {
     var self = this;
     var registerEventBlockNumber = 0;
     var redditRegistry;
-
     Registry.deployed().then(function(instance) {
       redditRegistry = instance;
-      return redditRegistry.lookupAddr.call(account, {from: account});
-    }).then(function(result) {
-
       var nameAddressProofEvent = redditRegistry.NameAddressProofRegistered({_addr: account}, {fromBlock: 0, toBlock: 'latest'});
       nameAddressProofEvent.watch(function(error, result){
         if (result.blockNumber >= registerEventBlockNumber) {
@@ -120,7 +118,7 @@ window.App = {
 
     }).catch(function(e) {
       console.log(e);
-      self.setRegisterStatus("Error getting reddit name; see log.");
+      self.setRegisterStatus("Unable to watch events; see log.");
     });
 
   },
@@ -134,7 +132,7 @@ window.App = {
 
     Registry.deployed().then(function(instance) {
       redditRegistry = instance;
-      return redditRegistry.lookupAddr.call(account, {from: account});
+      return redditRegistry.lookupAddr.call(account, registrarType, {from: account});
     }).then(function(result) {
       var name_element = document.getElementById("name");
       var proofUrl_element = document.getElementById("proofUrl");
@@ -153,6 +151,7 @@ window.App = {
   },
 
   register: function() {
+
     var self = this;
 
     var addr = document.getElementById("addr").value;
@@ -161,13 +160,14 @@ window.App = {
     var redditRegistry;
     Registry.deployed().then(function(instance) {
       redditRegistry = instance;
-      return redditRegistry.getCost.call({from: account});
+      return redditRegistry.getCost.call(registrarType, {from: account});
     }).then(function(price) {
-      return redditRegistry.register(proof, addr, {from: account, value: price.toNumber()});
+      return redditRegistry.register(proof, addr, registrarType, {from: account, value: price.toNumber()});
     }).catch(function(e) {
       console.log(e);
       self.setRegisterStatus("Error registering; see log.");
     });
+
   },
 
   lookupAddr: function() {
@@ -176,7 +176,7 @@ window.App = {
     var redditRegistry;
     Registry.deployed().then(function(instance) {
       redditRegistry = instance;
-      return redditRegistry.lookupAddr.call(addr, {from: account});
+      return registry.lookupAddr.call(addr, registrarType, {from: account});
     }).then(function(result) {
       var name_element = document.getElementById("lookupName");
       self.updateLookupProofUrl(result[1]);
@@ -193,7 +193,7 @@ window.App = {
     var redditRegistry;
     Registry.deployed().then(function(instance) {
       redditRegistry = instance;
-      return redditRegistry.lookupName.call(name, {from: account});
+      return redditRegistry.lookupName.call(name, registrarType, {from: account});
     }).then(function(result) {
       var addr_element = document.getElementById("lookupAddr");
       self.updateLookupProofUrl(result[1]);

@@ -6,6 +6,7 @@ import '../installed_contracts/zeppelin/contracts/ownership/Ownable.sol';
 import "./RegistrarI.sol";
 import "./RegistryI.sol";
 
+//Base class for oraclize based registrar - abstract
 contract OraclizeRegistrar is Ownable, usingOraclize {
 
   event OracleQueryReceived(string _result, bytes32 _id);
@@ -18,15 +19,22 @@ contract OraclizeRegistrar is Ownable, usingOraclize {
 
   RegistryI registry;
 
-  modifier onlyOraclizeOrOwner() {
-    if ((msg.sender != owner) && (msg.sender != oraclize_cbAddress())) {
+  modifier onlyOraclizeOrRegistry() {
+    if ((msg.sender != address(registry)) && (msg.sender != oraclize_cbAddress())) {
       throw;
     }
     _;
   }
 
-  function OraclizeRegistrar() {
-    registry = RegistryI(msg.sender);
+  modifier onlyRegistry() {
+    if (msg.sender != address(registry)) {
+      throw;
+    }
+    _;
+  }
+
+  function OraclizeRegistrar(address _registry) {
+    registry = RegistryI(_registry);
   }
 
   function __callback(bytes32 _id, string _result) {
@@ -36,7 +44,7 @@ contract OraclizeRegistrar is Ownable, usingOraclize {
     _callback(_id, _result);
   }
 
-  function _callback(bytes32 _id, string _result) onlyOraclizeOrOwner {
+  function _callback(bytes32 _id, string _result) onlyOraclizeOrRegistry {
 
     //Record callback received
     oracleCallbackComplete[_id] = true;
@@ -61,12 +69,12 @@ contract OraclizeRegistrar is Ownable, usingOraclize {
 
   }
 
-  function _register(bytes32 oracleId, address expectedAddress, string proof) onlyOwner {
+  function _register(bytes32 oracleId, address expectedAddress, string proof) onlyRegistry {
     oracleExpectedAddress[oracleId] = expectedAddress;
     oracleProof[oracleId] = proof;
   }
 
-  function _clearOracleId(bytes32 oracleId) onlyOwner {
+  function _clearOracleId(bytes32 oracleId) onlyRegistry {
     oracleExpectedAddress[oracleId] = 0x0;
     oracleProof[oracleId] = "";
     oracleCallbackComplete[oracleId] = false;

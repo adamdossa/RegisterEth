@@ -5,19 +5,18 @@ import '../installed_contracts/zeppelin/contracts/ownership/Ownable.sol';
 
 import "./RegistryI.sol";
 import "./RegistrarI.sol";
-import "./RegistrarFactory.sol";
 
 contract Registry is RegistryI, Ownable {
 
+  event RegistrarUpdated(string _registrarType, address _registrar);
   event RegistrationSent(string _proof, address indexed _addr, bytes32 _id, uint8 _registrarType);
   event NameAddressProofRegistered(string _name, address indexed _addr, string _proof, bytes32 _id, uint8 _registrarType);
   event RegistrarError(address indexed _addr, bytes32 _id, string _result, string _message, uint8 _registrarType);
   event AddressMismatch(address _actual, address indexed _addr, uint8 _registrarType);
   event InsufficientFunds(uint _funds, uint _cost, address indexed _addr, uint8 _registrarType);
-  event RegistrarNotFound(address _addr, uint8 _registrar, uint8 _registrarType);
 
-  string[] registrarTypes;
-  RegistrarI[] registrars;
+  string[] public registrarTypes;
+  RegistrarI[] public registrars;
 
   mapping (uint8 => mapping (address => string)) addrToName;
   mapping (uint8 => mapping (string => address)) nameToAddr;
@@ -44,10 +43,12 @@ contract Registry is RegistryI, Ownable {
   }
 
   function Registry() {
-    registrars.push(RegistrarFactory.newComputationRegistrar());
-    registrarTypes.push("REDDIT");
-    registrars.push(RegistrarFactory.newURLRegistrar());
-    registrarTypes.push("GITHUB");
+  }
+
+  function createRegistrar(string _registrarType, address _registrar) public onlyOwner {
+    registrars.push(RegistrarI(_registrar));
+    registrarTypes.push(_registrarType);
+    RegistrarUpdated(_registrarType, _registrar);
   }
 
   function lookupAddr(address _addr, uint8 _registrarType) public constant validRegistrar(_registrarType) returns(string name, string proof) {
