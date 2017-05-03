@@ -3,13 +3,7 @@ import Drawer from 'material-ui/Drawer';
 import MenuItem from 'material-ui/MenuItem';
 import RaisedButton from 'material-ui/RaisedButton';
 
-
 import {Link} from 'react-router-dom'
-
-
-
-
-
 
 const style ={
     margin: 0,
@@ -28,7 +22,6 @@ export default class SideNav extends React.Component {
       handleClose = () => this.setState({open: false});
 
       render() {
-
 
         return (
 
@@ -51,14 +44,14 @@ export default class SideNav extends React.Component {
                   About
              </MenuItem>
               <MenuItem
-                  containerElement={<Link to="/decentralized-counter" />}
+                  containerElement={<Link to="/reddit" />}
                   onTouchTap={this.handleClose}>
-                  Decentralized Counter
+                  Reddit
                </MenuItem>
                <MenuItem
-                   containerElement={<Link to="/send" />}
+                   containerElement={<Link to="/github" />}
                    onTouchTap={this.handleClose}>
-                  Send
+                  Github
                 </MenuItem>
             </Drawer>
 
