@@ -8,14 +8,20 @@ import "./RegistrarI.sol";
 
 contract Registry is RegistryI, Ownable {
 
-  event RegistrarUpdated(string _registrarType, address _registrar);
-  event RegistrationSent(string _proof, address indexed _addr, bytes32 _id, uint8 _registrarType);
-  event NameAddressProofRegistered(string _name, address indexed _addr, string _proof, bytes32 _id, uint8 _registrarType);
-  event RegistrarError(address indexed _addr, bytes32 _id, string _result, string _message, uint8 _registrarType);
-  event AddressMismatch(address _actual, address indexed _addr, uint8 _registrarType);
-  event InsufficientFunds(uint _funds, uint _cost, address indexed _addr, uint8 _registrarType);
+  //Initialization events
+  event RegistrarUpdated(address indexed _addr, string _registrarName, address _registrar, uint8 _registrarType);
+
+  //Success events
+  event RegistrationSent(address indexed _addr, string _proof, bytes32 _id, uint8 _registrarType);
+  event NameAddressProofRegistered(address indexed _addr, string _name, string _proof, bytes32 _id, uint8 _registrarType);
+
+  //Error events
+  event RegistrarError(address indexed _addr, bytes32 _id, string _result, uint8 _registrarType, string _message);
+  event AddressMismatch(address indexed _addr, address _mismatchedAddr, uint8 _registrarType, string _message);
+  event InsufficientFunds(address indexed _addr, uint _funds, uint _cost, uint8 _registrarType, string _message);
 
   string[] public registrarTypes;
+  string[] public registrarDetails;
   RegistrarI[] public registrars;
 
   mapping (uint8 => mapping (address => string)) addrToName;
@@ -42,13 +48,11 @@ contract Registry is RegistryI, Ownable {
     _;
   }
 
-  function Registry() {
-  }
-
-  function createRegistrar(string _registrarType, address _registrar) public onlyOwner {
+  function createRegistrar(string _registrarType, string _registrarDetail, address _registrar) public onlyOwner {
     registrars.push(RegistrarI(_registrar));
     registrarTypes.push(_registrarType);
-    RegistrarUpdated(_registrarType, _registrar);
+    registrarDetails.push(_registrarDetail);
+    RegistrarUpdated(msg.sender, _registrarType, _registrar, uint8(registrars.length) - 1);
   }
 
   function lookupAddr(address _addr, uint8 _registrarType) public constant validRegistrar(_registrarType) returns(string name, string proof) {
@@ -63,18 +67,18 @@ contract Registry is RegistryI, Ownable {
 
       //_addr not strictly needed - but we use it to do an upfront check to avoid wasted oracle queries
       if (msg.sender != _addr) {
-        AddressMismatch(msg.sender, _addr, _registrarType);
+        AddressMismatch(msg.sender, _addr, _registrarType, "Sending address does not match supplied address!");
         return;
       }
 
       uint cost = registrars[_registrarType].getCost();
       if (cost > this.balance) {
-        InsufficientFunds(this.balance, cost, _addr, _registrarType);
+        InsufficientFunds(_addr, this.balance, cost, _registrarType, "Insufficient funds sent of Oraclize queries!");
         return;
       }
 
-      bytes32 id = registrars[_registrarType].register.value(this.balance)(_proof, _addr);
-      RegistrationSent(_proof, _addr, id, _registrarType);
+      bytes32 id = registrars[_registrarType].register.value(cost)(_proof, _addr);
+      RegistrationSent(_addr, _proof, id, _registrarType);
 
       registrarIdToType[id] = _registrarType;
       return id;
@@ -90,11 +94,15 @@ contract Registry is RegistryI, Ownable {
     nameToAddr[registrarIdToType[_id]][_name] = _addr;
     addrToProof[registrarIdToType[_id]][_addr] = _proof;
     nameToProof[registrarIdToType[_id]][_name] = _proof;
-    NameAddressProofRegistered(_name, _addr, _proof, _id, registrarIdToType[_id]);
+    NameAddressProofRegistered(_addr, _name, _proof, _id, registrarIdToType[_id]);
   }
 
   function error(bytes32 _id, address _addr, string _result, string _message) onlyRegistrar {
-    RegistrarError(_addr, _id, _result, _message, registrarIdToType[_id]);
+    RegistrarError(_addr, _id, _result, registrarIdToType[_id], _message);
+  }
+
+  function getDetail(uint8 _registrarType) public constant validRegistrar(_registrarType) returns(string detail) {
+    return registrarDetails[_registrarType];
   }
 
 }

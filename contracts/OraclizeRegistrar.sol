@@ -103,7 +103,7 @@ contract OraclizeRegistrar is Ownable, usingOraclize {
     uint bytesLength = 0;
     uint bytesStart;
     uint inputPos = 0;
-    bytes1 c;
+    
     bool reading = false;
     //We know first and last bytes are square brackets
     for (inputPos = 1; inputPos < inputBytes.length - 1; inputPos++) {
